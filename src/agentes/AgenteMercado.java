@@ -5,6 +5,7 @@
  */
 package agentes;
 
+import gui.ConsolaJFrame;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -21,6 +22,7 @@ import java.util.LinkedList;
 import java.util.Random;
 import tareas.TareaBuscarPaginasAmarillas;
 import tareas.TareaEnviarMensajeConsola;
+import utilidad.MensajeConsola;
 
 /**
  *
@@ -39,6 +41,7 @@ public class AgenteMercado extends Agent
     private ArrayList<AID> monitores;
     private LinkedList<Oferta> ofertas;
     private LinkedList<ACLMessage> mensajes;
+    ConsolaJFrame gui;
 
     @Override
     protected void setup() 
@@ -48,8 +51,9 @@ public class AgenteMercado extends Agent
         consolas = new ArrayList();
         monitores = new ArrayList();
         ofertas = new LinkedList();
+        mensajes = new LinkedList();
         //Configuración del GUI
-
+        gui = new ConsolaJFrame(this);
         //Registro del agente en las Páginas Amarrillas
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
@@ -83,8 +87,16 @@ public class AgenteMercado extends Agent
     protected void takeDown() 
     {
         //Desregristo del agente de las Páginas Amarillas
-
+        try
+        {
+            DFService.deregister(this);
+        }
+        catch (FIPAException e)
+        {
+            e.printStackTrace();
+        }
         //Liberación de recursos, incluido el GUI
+        gui.dispose();
         //Despedida
         System.out.println("Finaliza la ejecución del agente: " + this.getName());
     }
@@ -191,14 +203,21 @@ public class AgenteMercado extends Agent
                 
                 if(precio <= fondos)
                 {
+                    System.out.println(myAgent.getAID() + "->Tenia " + fondos + ", me gasto " + precio + " y me quedan " + (fondos - precio));
                     fondos -= precio;
                     ++cosechas;
                     
-                    ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                    msg.setSender(myAgent.getAID());
-                    msg.addReceiver(consolas.get(0));
-                    msg.setContent("->Agente mercado " + myAgent.getName() + " compra cosecha por valor " + precio + " al agricultor " + confirmacion.getSender().getName() + "\n");
-                    mensajes.add(msg);
+                    if(!consolas.isEmpty())
+                    {
+                        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                        msg.setSender(myAgent.getAID());
+                        msg.addReceiver(consolas.get(0));
+                        msg.setContent("->Agente mercado " + myAgent.getName() + " compra cosecha por valor " + precio + " al agricultor " + confirmacion.getSender().getName() + "\n");
+                        mensajes.add(msg);
+                    }
+                    
+                    gui.presentarSalida(new MensajeConsola(myAgent.getName(), "->Agente mercado compra cosecha por valor " + precio + " al agricultor " + confirmacion.getSender().getName() + "\n" + 
+                            "\tTiene " + fondos + " euros y ha comprado " + cosechas + "\n"));
                     
                     addBehaviour(new TareaComunicarStock());
                 }
@@ -271,7 +290,7 @@ public class AgenteMercado extends Agent
             msg.setSender(myAgent.getAID());
             for(AID monitor : monitores)
                 msg.addReceiver(monitor);
-            msg.setContent(Integer.toString(cosechas));
+            msg.setContent("mercado:" + Integer.toString(cosechas));
             send(msg);
         }
     }

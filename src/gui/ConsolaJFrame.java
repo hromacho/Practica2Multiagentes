@@ -6,6 +6,7 @@
 package gui;
 
 import agentes.AgenteConsola;
+import jade.core.Agent;
 import utilidad.MensajeConsola;
 
 /**
@@ -13,16 +14,16 @@ import utilidad.MensajeConsola;
  * @author Hugo
  */
 public class ConsolaJFrame extends javax.swing.JFrame {
-    private AgenteConsola consola; //Nombre del agente consola asociado.
+    private Agent agenteAsociado; //Nombre del agente consola asociado.
     private OkCancelJDialog dialogoFinalizacion;
     
     /**
      * Creates new form ConsolaJFrame
      */
-    public ConsolaJFrame(AgenteConsola consola) {
-        this.consola = consola;
+    public ConsolaJFrame(Agent asociado) {
+        this.agenteAsociado = asociado;
         initComponents();
-        setTitle(consola.getName());
+        setTitle(asociado.getName());
     }
 
     
@@ -71,7 +72,7 @@ public class ConsolaJFrame extends javax.swing.JFrame {
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
-        dialogoFinalizacion = new OkCancelJDialog(this, true, consola);
+        dialogoFinalizacion = new OkCancelJDialog(this, true, agenteAsociado);
         dialogoFinalizacion.setVisible(true);
     }//GEN-LAST:event_formWindowClosing
 

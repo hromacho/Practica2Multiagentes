@@ -17,7 +17,7 @@ import java.util.ArrayList;
 /**
  *
  * @author Hugo
- * Tarea encargada de buscar un servicio en las páginas amarillas dado por su nombre.
+ * Tarea encargada de buscar un servicio en las pginas amarillas dado por su nombre.
  */
 public class TareaBuscarPaginasAmarillas extends TickerBehaviour
 {
@@ -27,7 +27,7 @@ public class TareaBuscarPaginasAmarillas extends TickerBehaviour
     /**
      * Constructor
      * @param a Agente que busca un servicio.
-     * @param periodo Periodo de tiempo (en milisegundos) en el que se repetirá la tarea.
+     * @param periodo Periodo de tiempo (en milisegundos) en el que se repetir la tarea.
      * @param service Nombre del servicio a buscar.
      * @param agentes ArrayAgentes perteneciente al agente que busca y que almacena los agentes encontrados que ofrecen un servicio.
      */
@@ -44,7 +44,7 @@ public class TareaBuscarPaginasAmarillas extends TickerBehaviour
         ServiceDescription servicio = new ServiceDescription(); //Buscamos el servicio especificado.
         servicio.setName(service);
 
-        // Plantilla de descripción que busca el agente
+        // Plantilla de descripcin que busca el agente
         DFAgentDescription descripcion = new DFAgentDescription();
 
         // Servicio que busca el agente
@@ -54,7 +54,7 @@ public class TareaBuscarPaginasAmarillas extends TickerBehaviour
             // Todas las descripciones que encajan con la plantilla proporcionada en el DF
             DFAgentDescription[] resultados = DFService.search(myAgent, descripcion);
             if(resultados.length > 0)
-            {   //Necesitaremos n espacios libres en el array, siendo n el número de agentes encontrados.
+            {   //Necesitaremos n espacios libres en el array, siendo n el nmero de agentes encontrados.
                 agentes.clear();
                 for (int i = 0; i < resultados.length; ++i)
                     agentes.add(resultados[i].getName()); //Finalmente los almacenamos en el array.

@@ -13,7 +13,7 @@ import jade.core.Agent;
  */
 public class OkCancelJDialog extends javax.swing.JDialog 
 {
-    private Agent agenteAsociado; //Agente asociado a este diálogo. Lo utilizaremos para borrarlo.
+    private Agent agenteAsociado; //Agente asociado a este dilogo. Lo utilizaremos para borrarlo.
     /**
      * Creates new form OkCancelJDialog
      */
@@ -55,7 +55,7 @@ public class OkCancelJDialog extends javax.swing.JDialog
             }
         });
 
-        textoDialogo.setText("Estás seguro de finalizar la ejecución del agente?");
+        textoDialogo.setText("Estas seguro de finalizar la ejecucion del agente?");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -95,7 +95,7 @@ public class OkCancelJDialog extends javax.swing.JDialog
 
     private void botonCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonCancelarActionPerformed
         // TODO add your handling code here:
-        this.dispose();
+        
     }//GEN-LAST:event_botonCancelarActionPerformed
 
     

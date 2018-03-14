@@ -71,7 +71,7 @@
     </Component>
     <Component class="javax.swing.JLabel" name="textoDialogo">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Est&#xe1;s seguro de finalizar la ejecuci&#xf3;n del agente?"/>
+        <Property name="text" type="java.lang.String" value="Estas seguro de finalizar la ejecucion del agente?"/>
       </Properties>
     </Component>
   </SubComponents>

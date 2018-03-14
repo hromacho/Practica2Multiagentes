@@ -5,6 +5,7 @@
  */
 package agentes;
 
+import gui.ConsolaJFrame;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -21,6 +22,7 @@ import java.util.LinkedList;
 import java.util.Random;
 import tareas.TareaBuscarPaginasAmarillas;
 import tareas.TareaEnviarMensajeConsola;
+import utilidad.MensajeConsola;
 
 /**
  *
@@ -36,6 +38,7 @@ public class AgenteAgricultor extends Agent
     private LinkedList<ACLMessage> mensajes;
     private int cosecha;
     private int ganancia;
+    ConsolaJFrame gui;
     
     @Override
     protected void setup() {
@@ -46,6 +49,7 @@ public class AgenteAgricultor extends Agent
        cosechas = new LinkedList();
        mensajes = new LinkedList();
        ganancia = 0;
+       gui = new ConsolaJFrame(this);
        //Configuraci�n del GUI
        
        //Registro del agente en las P�ginas Amarrillas
@@ -87,7 +91,7 @@ public class AgenteAgricultor extends Agent
            e.printStackTrace();
        }
        //Liberaci�n de recursos, incluido el GUI
-       
+       gui.dispose();
        //Despedida
        System.out.println("Finaliza la ejecuci�n del agente: " + this.getName());
     }
@@ -194,12 +198,18 @@ public class AgenteAgricultor extends Agent
                     msg.setContent(cnt);
                     send(msg);
 
-                    ACLMessage msg2 = new ACLMessage(ACLMessage.INFORM); //Enviamos nuestro mensaje a la consola.
-                    msg2.setSender(myAgent.getAID());
-                    msg2.addReceiver(consolas.get(0));
-                    msg2.setContent("->Agente agricultor " + myAgent.getName() + " vende cosecha por valor " + precio + " al mercado " + mensaje.getSender().getName() + "\n");
-                    mensajes.add(msg2);
+                    if(!consolas.isEmpty())
+                    {
+                        ACLMessage msg2 = new ACLMessage(ACLMessage.INFORM); //Enviamos nuestro mensaje a la consola.
+                        msg2.setSender(myAgent.getAID());
+                        msg2.addReceiver(consolas.get(0));
+                        msg2.setContent("->Agente agricultor " + myAgent.getName() + " vende cosecha por valor " + precio + " al mercado " + mensaje.getSender().getName() + "\n");
+                        mensajes.add(msg2);
+                    }
                     
+                    gui.presentarSalida(new MensajeConsola(myAgent.getName(), "->Agente agricultor vende cosecha por valor " + precio + " al mercado " + mensaje.getSender().getName() + "\n" + 
+                            "\tTiene " + cosechas.size() + " cosechas  y ha ganado hasta ahora " + ganancia + "\n"));
+
                     //Este mensaje destinado a todos los mercados (menos del que va a comprar la cosecha) les indica que deben borrar la oferta de este
                     //agricultor porque ya ha sido vendida.
                     ACLMessage msg3 = new ACLMessage(ACLMessage.INFORM); 
@@ -212,6 +222,7 @@ public class AgenteAgricultor extends Agent
                     send(msg3);
 
                     addBehaviour(new TareaComunicarGanancias());
+                    System.out.println("Me quedan " + cosechas.size() + " cosechas");
                 }
                 else
                 {
@@ -250,7 +261,8 @@ public class AgenteAgricultor extends Agent
             msg.setSender(myAgent.getAID());
             for(AID monitor : monitores)
                 msg.addReceiver(monitor);
-            msg.setContent(Integer.toString(ganancia));
+                
+            msg.setContent("agricultor:" + Integer.toString(ganancia));
             send(msg);
         }
     }
