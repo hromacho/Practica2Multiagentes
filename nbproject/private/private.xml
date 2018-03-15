@@ -4,10 +4,14 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/C:/Users/Hugo/Documents/NetBeansProjects/Practica2Multiagentes/src/agentes/AgenteConsola.java</file>
+            <file>file:/C:/Users/Hugo/Documents/NetBeansProjects/Practica2Multiagentes/src/utilidad/MensajeConsola.java</file>
             <file>file:/C:/Users/Hugo/Documents/NetBeansProjects/Practica2Multiagentes/src/tareas/TareaEnviarMensajeConsola.java</file>
+            <file>file:/C:/Users/Hugo/Documents/NetBeansProjects/Practica2Multiagentes/src/gui/ConsolaJFrame.java</file>
             <file>file:/C:/Users/Hugo/Documents/NetBeansProjects/Practica2Multiagentes/src/agentes/AgenteAgricultor.java</file>
+            <file>file:/C:/Users/Hugo/Documents/NetBeansProjects/Practica2Multiagentes/src/gui/OkCancelJDialog.java</file>
             <file>file:/C:/Users/Hugo/Documents/NetBeansProjects/Practica2Multiagentes/src/agentes/AgenteMercado.java</file>
             <file>file:/C:/Users/Hugo/Documents/NetBeansProjects/Practica2Multiagentes/src/tareas/TareaBuscarPaginasAmarillas.java</file>
+            <file>file:/C:/Users/Hugo/Documents/NetBeansProjects/Practica2Multiagentes/src/agentes/AgenteMonitor.java</file>
         </group>
     </open-files>
 </project-private>

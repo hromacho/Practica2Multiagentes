@@ -16,12 +16,10 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import tareas.TareaBuscarPaginasAmarillas;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-import tareas.TareaEnviarMensajeConsola;
 import utilidad.MensajeConsola;
 
 /**
@@ -33,7 +31,7 @@ public class AgenteMonitor extends Agent
     //Variables del agente
     //private ArrayList<AID> agricultores;
     //private ArrayList<AID> mercados;
-    private ArrayList<AID> consolas;
+    //private ArrayList<AID> consolas;
     private LinkedList<ACLMessage> mensajes;
     private TreeMap<AID, Integer> clasificacionMercados;
     private TreeMap<AID, Integer> clasificacionAgricultores;
@@ -42,9 +40,6 @@ public class AgenteMonitor extends Agent
     @Override
     protected void setup() {
        //Inicialización de las variables del agente
-       //agricultores = new ArrayList();
-       //mercados = new ArrayList();
-       consolas = new ArrayList();
        mensajes = new LinkedList();
        clasificacionMercados = new TreeMap();
        clasificacionAgricultores = new TreeMap();
@@ -69,10 +64,6 @@ public class AgenteMonitor extends Agent
        
        System.out.println("Se inicia la ejecución del agente: " + this.getName());
        //Añadir las tareas principales
-       //addBehaviour(new TareaBuscarPaginasAmarillas(this, 5000, "Agricultor", agricultores));
-       //addBehaviour(new TareaBuscarPaginasAmarillas(this, 5000, "Mercado", mercados));
-       addBehaviour(new TareaBuscarPaginasAmarillas(this, 5000, "Consola", consolas));
-       addBehaviour(new TareaEnviarMensajeConsola(this, 2000, consolas, mensajes));
        addBehaviour(new TareaClasificacion(this, 15000));
        addBehaviour(new TareaRecibirMensajes());
     }
@@ -114,20 +105,14 @@ public class AgenteMonitor extends Agent
             {
                 String cnt;
                 cnt = mensaje.getContent();
-                //System.out.println("Contenido del mensaje: " + cnt + "\n");
                 int i = cnt.indexOf(":");
                 String emisor = cnt.substring(0, i);
                 int cantidad = Integer.parseInt(cnt.substring(i + 1, cnt.length()));
-                //System.out.println("Emisor: " + emisor + "\tCantidad: " + Integer.toString(cantidad) + "\n");
-                //TreeMap.SimpleEntry<AID, Integer> entry = new TreeMap.SimpleEntry(mensaje.getSender(), Integer.parseInt(cnt.substring(i + 1, cnt.length())));
                 
                 if(emisor.equals("agricultor"))
                     clasificacionAgricultores.put(mensaje.getSender(), cantidad);
                 else
                     clasificacionMercados.put(mensaje.getSender(), cantidad);
-                
-                //System.out.println("Cantidad de agricultores: " + clasificacionAgricultores.size() + "\n");
-                //System.out.println("Cantidad de mercados: " + clasificacionMercados.size() + "\n");
             }
             else
                 block();
@@ -152,7 +137,7 @@ public class AgenteMonitor extends Agent
             {
                 tmp.add(entry);
             }
-            tmp.sort((entry1, entry2) -> entry1.getValue().compareTo(entry2.getValue()));
+            tmp.sort((entry1, entry2) -> entry2.getValue().compareTo(entry1.getValue()));
             for(Entry<AID, Integer> entry : tmp)
             {
                 clasifAgric = clasifAgric.concat("\tAgricultor " + entry.getKey().getName() + " con ganancias de " + entry.getValue() + "\n");
@@ -163,23 +148,13 @@ public class AgenteMonitor extends Agent
             {
                 tmp.add(entry);
             }
-            tmp.sort((entry1, entry2) -> entry1.getValue().compareTo(entry2.getValue()));
+            tmp.sort((entry1, entry2) -> entry2.getValue().compareTo(entry1.getValue()));
             for(Entry<AID, Integer> entry : tmp)
             {
                 clasifMerc = clasifMerc.concat("\tMercado " + entry.getKey().getName() + " con stock de " + entry.getValue() + "\n");
             }
             
-            
-            if(!consolas.isEmpty())
-            {
-                ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                msg.setSender(myAgent.getAID());
-                msg.addReceiver(consolas.get(0));
-
-                msg.setContent(clasifAgric + clasifMerc + "\n");
-                mensajes.add(msg);
-            }
-            gui.presentarSalida(new MensajeConsola(myAgent.getName(), clasifAgric + clasifMerc + "\n"));
+            gui.presentarSalida(new MensajeConsola(myAgent.getName(), "\n" + clasifAgric + clasifMerc + "\n"));
         }
     }
 }

@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Random;
 import tareas.TareaBuscarPaginasAmarillas;
-import tareas.TareaEnviarMensajeConsola;
 import utilidad.MensajeConsola;
 
 /**
@@ -34,10 +33,16 @@ public class AgenteMercado extends Agent
     {
         public AID vendedor;
         public int precio;
+        
+        @Override
+        public String toString()
+        {
+            return Integer.toString(precio);
+        }
     };
     int fondos;
     int cosechas;
-    private ArrayList<AID> consolas;
+    //private ArrayList<AID> consolas;
     private ArrayList<AID> monitores;
     private LinkedList<Oferta> ofertas;
     private LinkedList<ACLMessage> mensajes;
@@ -48,7 +53,6 @@ public class AgenteMercado extends Agent
     {
         //Inicialización de las variables del agente
         fondos = 0;
-        consolas = new ArrayList();
         monitores = new ArrayList();
         ofertas = new LinkedList();
         mensajes = new LinkedList();
@@ -72,15 +76,11 @@ public class AgenteMercado extends Agent
         //Registro de la Ontología
         System.out.println("Se inicia la ejecución del agente: " + this.getName());
         //Añadir las tareas principales
-        addBehaviour(new TareaBuscarPaginasAmarillas(this, 5000, "Consola", consolas));
         addBehaviour(new TareaBuscarPaginasAmarillas(this, 5000, "Monitor", monitores));
-        addBehaviour(new TareaEnviarMensajeConsola(this, 2000, consolas, mensajes));
         addBehaviour(new TareaRecibirInversiones(this, 3000));
         addBehaviour(new TareaComprarCosecha(this, 6000));
         addBehaviour(new TareaConfirmarCompra());
-        addBehaviour(new TareaBorrarOferta());
         addBehaviour(new TareaRecibirOfertas());
-        
     }
 
     @Override
@@ -179,6 +179,9 @@ public class AgenteMercado extends Agent
                 msg.addReceiver(min.vendedor);
                 msg.setContent(Integer.toString(min.precio));
                 send(msg);
+                
+                //Dejamos que los agentes agricultores nos manden de nuevo sus ofertas o argo así.
+                ofertas.clear();
             }
         }
     }
@@ -194,7 +197,6 @@ public class AgenteMercado extends Agent
         public void action()
         {
             ACLMessage confirmacion = receive(MessageTemplate.MatchPerformative(ACLMessage.CONFIRM));
-            //ACLMessage rechaza = receive(MessageTemplate.MatchPerformative(ACLMessage.CANCEL));
             if(confirmacion != null)
             {
                 String cnt;
@@ -203,18 +205,8 @@ public class AgenteMercado extends Agent
                 
                 if(precio <= fondos)
                 {
-                    System.out.println(myAgent.getAID() + "->Tenia " + fondos + ", me gasto " + precio + " y me quedan " + (fondos - precio));
                     fondos -= precio;
                     ++cosechas;
-                    
-                    if(!consolas.isEmpty())
-                    {
-                        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                        msg.setSender(myAgent.getAID());
-                        msg.addReceiver(consolas.get(0));
-                        msg.setContent("->Agente mercado " + myAgent.getName() + " compra cosecha por valor " + precio + " al agricultor " + confirmacion.getSender().getName() + "\n");
-                        mensajes.add(msg);
-                    }
                     
                     gui.presentarSalida(new MensajeConsola(myAgent.getName(), "->Agente mercado compra cosecha por valor " + precio + " al agricultor " + confirmacion.getSender().getName() + "\n" + 
                             "\tTiene " + fondos + " euros y ha comprado " + cosechas + "\n"));
@@ -230,51 +222,10 @@ public class AgenteMercado extends Agent
                     send(cancelar);
                 }
             }
-            //else if(rechaza != null)
-            //{
-                //Enviar mensaje a consola?
-            //}
             else
                 block();
         }
     }
-    
-    public class TareaBorrarOferta extends CyclicBehaviour
-    {
-        public TareaBorrarOferta()
-        {
-            
-        }
-        
-        @Override
-        public void action()
-        {
-            ACLMessage mensaje = receive(MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-            if(mensaje != null)
-            {
-                String cnt;
-                cnt = mensaje.getContent();
-                int precio = Integer.parseInt(cnt);
-                
-                int index = -1;
-                for(int i = 0; i < ofertas.size(); ++i)
-                {
-                    if(ofertas.get(i).vendedor.equals(mensaje.getSender()) && ofertas.get(i).precio == precio)
-                    {
-                        index = i;
-                        break;
-                    }
-                }
-                
-                if(index != -1)
-                    ofertas.remove(index);
-                //Y con esto, las siguientes veces que consideremos la mejor oferta de las almacenadas, no consideraremos ofertas potencialmente inexistentes.
-            }
-            else
-                block();
-        }
-    }
-    
     
     public class TareaComunicarStock extends OneShotBehaviour
     {
