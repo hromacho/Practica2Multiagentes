@@ -42,10 +42,8 @@ public class AgenteMercado extends Agent
     };
     int fondos;
     int cosechas;
-    //private ArrayList<AID> consolas;
     private ArrayList<AID> monitores;
     private LinkedList<Oferta> ofertas;
-    private LinkedList<ACLMessage> mensajes;
     ConsolaJFrame gui;
 
     @Override
@@ -55,7 +53,6 @@ public class AgenteMercado extends Agent
         fondos = 0;
         monitores = new ArrayList();
         ofertas = new LinkedList();
-        mensajes = new LinkedList();
         //Configuración del GUI
         gui = new ConsolaJFrame(this);
         //Registro del agente en las Páginas Amarrillas
@@ -81,6 +78,7 @@ public class AgenteMercado extends Agent
         addBehaviour(new TareaComprarCosecha(this, 6000));
         addBehaviour(new TareaConfirmarCompra());
         addBehaviour(new TareaRecibirOfertas());
+        addBehaviour(new TareaBorrarOferta());
     }
 
     @Override
@@ -136,13 +134,10 @@ public class AgenteMercado extends Agent
                 cnt = mensaje.getContent();
                 int precio = Integer.parseInt(cnt);
                 
-                if(precio <= fondos)
-                {
-                    Oferta ofer = new Oferta();
-                    ofer.precio = precio;
-                    ofer.vendedor = mensaje.getSender();
-                    ofertas.add(ofer);
-                }
+                Oferta ofer = new Oferta();
+                ofer.precio = precio;
+                ofer.vendedor = mensaje.getSender();
+                ofertas.add(ofer);
             }
             else
                 block();
@@ -180,7 +175,7 @@ public class AgenteMercado extends Agent
                 msg.setContent(Integer.toString(min.precio));
                 send(msg);
                 
-                //Dejamos que los agentes agricultores nos manden de nuevo sus ofertas o argo así.
+                //Dejamos que los agentes agricultores nos manden de nuevo sus ofertas.
                 ofertas.clear();
             }
         }
@@ -221,6 +216,42 @@ public class AgenteMercado extends Agent
                     cancelar.setContent(cnt);
                     send(cancelar);
                 }
+            }
+            else
+                block();
+        }
+    }
+    
+    public class TareaBorrarOferta extends CyclicBehaviour
+    {
+        public TareaBorrarOferta()
+        {
+            
+        }
+        
+        @Override
+        public void action()
+        {
+            ACLMessage mensaje = receive(MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+            if(mensaje != null)
+            {
+                String cnt;
+                cnt = mensaje.getContent();
+                int precio = Integer.parseInt(cnt);
+                
+                int index = -1;
+                for(int i = 0; i < ofertas.size(); ++i)
+                {
+                    if(ofertas.get(i).vendedor.equals(mensaje.getSender()) && ofertas.get(i).precio == precio)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+                
+                if(index != -1)
+                    ofertas.remove(index);
+                //Y con esto, las siguientes veces que consideremos la mejor oferta de las almacenadas, no consideraremos ofertas potencialmente inexistentes.
             }
             else
                 block();

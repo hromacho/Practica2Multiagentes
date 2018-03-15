@@ -114,10 +114,8 @@ public class AgenteAgricultor extends Agent
         }
     }
     
-    //No sé cómo hacer esto.
-    //Tal vez tenga que apuntarse en la páginas amarillas ofreciendo su servicio.
-    //Creo que esto tiene que ser un ticker y pilla las cosechas de algún sitio. Wait a sec que piense.
-    public class TareaVenderCosecha extends OneShotBehaviour //DUDEEE
+    
+    public class TareaVenderCosecha extends OneShotBehaviour
     {
         public TareaVenderCosecha()
         {
@@ -167,8 +165,6 @@ public class AgenteAgricultor extends Agent
                 cnt = mensaje.getContent();
                 int precio = Integer.parseInt(cnt);
                 
-                //Aunque los mercados hayan borrado ya la cosecha de su lista de ofertas, puede que aun así hayan llegado a pedir dicha cosecha.
-                //En ese caso tenemos que encargarnos de ello. 
                 int indice = -1; //Es probable que ya hayamos vendido nuestra cosecha a otro mercado.
                 for(int i = 0; i < cosechas.size(); ++i)
                     if(cosechas.get(i).intValue() == precio)
@@ -179,9 +175,9 @@ public class AgenteAgricultor extends Agent
                         
                 if(indice != -1)
                 {
-                    gui.presentarSalida(new MensajeConsola(myAgent.getName(), "Antes: " + cosechas.toString() + "\n"));
+                    //gui.presentarSalida(new MensajeConsola(myAgent.getName(), "Antes: " + cosechas.toString() + "\n"));
                     ganancia += cosechas.remove(indice).intValue();
-                    gui.presentarSalida(new MensajeConsola(myAgent.getName(), "Despues: " + cosechas.toString() + "\n"));
+                    //gui.presentarSalida(new MensajeConsola(myAgent.getName(), "Despues: " + cosechas.toString() + "\n"));
                     ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM); //Enviamos un mensaje de confirmación de compra
                     msg.setSender(myAgent.getAID());
                     msg.addReceiver(mensaje.getSender()); 
@@ -191,12 +187,48 @@ public class AgenteAgricultor extends Agent
                     gui.presentarSalida(new MensajeConsola(myAgent.getName(), "->Agente agricultor vende cosecha por valor " + precio + " al mercado " + mensaje.getSender().getName() + "\n" + 
                             "\tTiene " + cosechas.size() + " cosechas  y ha ganado hasta ahora " + ganancia + "\n"));
 
+                    //Este mensaje destinado a todos los mercados (menos del que va a comprar la cosecha) les indica que deben borrar la oferta de este
+                    //agricultor porque ya ha sido vendida.
+                    ACLMessage msg3 = new ACLMessage(ACLMessage.INFORM); 
+                    msg3.setSender(myAgent.getAID());
+                    for(AID mercado : mercados)
+                        if(mercado != mensaje.getSender())
+                            msg3.addReceiver(mercado);
+                        
+                    msg3.setContent(cnt);
+                    send(msg3);
+                    
                     addBehaviour(new TareaComunicarGanancias());
                 }
-                else
-                {
-                    
-                }
+            }
+            else
+                block();
+        }
+    }
+    
+    /**
+     * Tarea que se ejecuta cuando un mercado ha aceptado una oferta pero no tiene fondos suficientes para comprarla.
+     */
+    public class TareaRechazarOferta extends CyclicBehaviour
+    {
+        public TareaRechazarOferta()
+        {
+            
+        }
+        
+        @Override
+        public void action()
+        {
+            ACLMessage mensaje = receive(MessageTemplate.MatchPerformative(ACLMessage.CANCEL));
+            if(mensaje != null)
+            {
+                String cnt;
+                cnt = mensaje.getContent();
+                int precio = Integer.parseInt(cnt);
+                
+                //Devolvemos la cosecha con el resto
+                cosechas.add(new AtomicInteger(precio));
+                ganancia -= precio;
             }
             else
                 block();
@@ -205,6 +237,9 @@ public class AgenteAgricultor extends Agent
     
     //Se ejecuta cada cierto tiempo y comprueba si hay nuevos mensajes de ganancias a mandar a la donde le corresponda.
     //Creo que podemos comunicar las ganancias cada vez que vendamos algo. Así se actualiza mejor.
+    /**
+     * OLA OLA OLA OLA OLA
+     */
     public class TareaComunicarGanancias extends OneShotBehaviour
     {
         public TareaComunicarGanancias()
