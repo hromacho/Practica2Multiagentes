@@ -29,9 +29,6 @@ import utilidad.MensajeConsola;
 public class AgenteMonitor extends Agent        
 {
     //Variables del agente
-    //private ArrayList<AID> agricultores;
-    //private ArrayList<AID> mercados;
-    //private ArrayList<AID> consolas;
     private LinkedList<ACLMessage> mensajes;
     private TreeMap<AID, Integer> clasificacionMercados;
     private TreeMap<AID, Integer> clasificacionAgricultores;
@@ -66,6 +63,7 @@ public class AgenteMonitor extends Agent
        //Añadir las tareas principales
        addBehaviour(new TareaClasificacion(this, 15000));
        addBehaviour(new TareaRecibirMensajes());
+       addBehaviour(new TareaFinalizar(this, 30000));
     }
 
     @Override
@@ -80,7 +78,6 @@ public class AgenteMonitor extends Agent
            e.printStackTrace();
        }
        //Liberación de recursos, incluido el GUI
-       gui.dispose();
        //Despedida
        System.out.println("Finaliza la ejecución del agente: " + this.getName());
     }
@@ -90,6 +87,9 @@ public class AgenteMonitor extends Agent
     
     //Clases internas que representan las tareas del agente
     
+    /**
+     * Tarea que se ejecutará cada vez que nos manden un mensaje tanto agricultores como mercados para comunicarnos su stock.
+     */
     public class TareaRecibirMensajes extends CyclicBehaviour
     {
         public TareaRecibirMensajes()
@@ -119,6 +119,9 @@ public class AgenteMonitor extends Agent
         }
     }
     
+    /**
+     * Tarea periódica que muestra la clasificación de mercados y agricultores.
+     */
     public class TareaClasificacion extends TickerBehaviour
     {
         public TareaClasificacion(Agent a, long period)
@@ -155,6 +158,51 @@ public class AgenteMonitor extends Agent
             }
             
             gui.presentarSalida(new MensajeConsola(myAgent.getName(), "\n" + clasifAgric + clasifMerc + "\n"));
+        }
+    }
+    
+    /**
+     * Tarea que finalizará a todos los agentes.
+     */
+    public class TareaFinalizar extends TickerBehaviour
+    {
+        public TareaFinalizar(Agent a, long periodo)
+        {
+            super(a, periodo);
+        }
+        
+        @Override
+        protected void onTick()
+        {
+            ACLMessage msg = new ACLMessage(ACLMessage.PROPAGATE);
+            String[] servicios = {"Agricultor", "Mercado"};
+            for(int i = 0; i < 2; ++i)
+            {
+                ServiceDescription servicio = new ServiceDescription(); //Buscamos el servicio especificado.
+                servicio.setName(servicios[i]);
+
+                // Plantilla de descripcin que busca el agente
+                DFAgentDescription descripcion = new DFAgentDescription();
+
+                // Servicio que busca el agente
+                descripcion.addServices(servicio);
+                try
+                {
+                    // Todas las descripciones que encajan con la plantilla proporcionada en el DF
+                    DFAgentDescription[] resultados = DFService.search(myAgent, descripcion);
+                    //Necesitaremos n espacios libres en el array, siendo n el nmero de agentes encontrados.
+                    for(int j = 0; j < resultados.length; ++j)
+                        msg.addReceiver(resultados[j].getName());
+
+                }
+                catch (FIPAException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            
+            myAgent.send(msg);
+            myAgent.doDelete();
         }
     }
 }

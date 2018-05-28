@@ -40,7 +40,6 @@ public class AgenteAgricultor extends Agent
     @Override
     protected void setup() {
        //Inicializaci�n de las variables del agente
-       //consolas = new ArrayList();
        mercados = new ArrayList();
        monitores = new ArrayList();
        cosechas = new LinkedList();
@@ -71,6 +70,7 @@ public class AgenteAgricultor extends Agent
        addBehaviour(new TareaBuscarPaginasAmarillas(this, 5000, "Mercado", mercados));
        addBehaviour(new TareaBuscarPaginasAmarillas(this, 5000, "Monitor", monitores));
        addBehaviour(new TareaRecolectarCosecha(this, 5000));
+       addBehaviour(new TareaFinalizar());
     }
 
     @Override
@@ -85,7 +85,6 @@ public class AgenteAgricultor extends Agent
            e.printStackTrace();
        }
        //Liberaci�n de recursos, incluido el GUI
-       gui.dispose();
        //Despedida
        System.out.println("Finaliza la ejecuci�n del agente: " + this.getName());
     }
@@ -95,7 +94,7 @@ public class AgenteAgricultor extends Agent
     
     //Clases internas que representan las tareas del agente
     
-    //Esta va cada 5 segundos
+    //Tarea con la que el agente agricultor recolecta una cosecha.
     public class TareaRecolectarCosecha extends TickerBehaviour
     {
         public TareaRecolectarCosecha(Agent a, long periodo)
@@ -108,13 +107,15 @@ public class AgenteAgricultor extends Agent
         {
             Random rnd = new Random();
             int x = rnd.nextInt(6) + 5; //Entre 5 y 10
-            cosechas.add(new AtomicInteger(x)); //Solo uno sobrevivirá :D
+            cosechas.add(new AtomicInteger(x));
             
             addBehaviour(new TareaVenderCosecha());
         }
     }
     
-    
+    /**
+     * Tarea que enviará un mensaje a todos los mercados con las cosechas disponibles.
+     */
     public class TareaVenderCosecha extends OneShotBehaviour
     {
         public TareaVenderCosecha()
@@ -129,7 +130,7 @@ public class AgenteAgricultor extends Agent
             {
                 for(int i = 0; i < cosechas.size(); ++i)
                 {
-                    int precio = cosechas.get(i).intValue(); //Ofertamos tooooodas las cosechas.
+                    int precio = cosechas.get(i).intValue(); //Ofertamos todas las cosechas.
                     
                     ACLMessage mens = new ACLMessage(ACLMessage.PROPOSE);
 
@@ -147,7 +148,9 @@ public class AgenteAgricultor extends Agent
         }
     }
     
-    
+    /**
+     * Esta tarea se ejecutará cada vez que recibamos una oferta.
+     */
     public class TareaRecibirOferta extends CyclicBehaviour
     {
         public TareaRecibirOferta()
@@ -175,9 +178,7 @@ public class AgenteAgricultor extends Agent
                         
                 if(indice != -1)
                 {
-                    //gui.presentarSalida(new MensajeConsola(myAgent.getName(), "Antes: " + cosechas.toString() + "\n"));
                     ganancia += cosechas.remove(indice).intValue();
-                    //gui.presentarSalida(new MensajeConsola(myAgent.getName(), "Despues: " + cosechas.toString() + "\n"));
                     ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM); //Enviamos un mensaje de confirmación de compra
                     msg.setSender(myAgent.getAID());
                     msg.addReceiver(mensaje.getSender()); 
@@ -187,7 +188,7 @@ public class AgenteAgricultor extends Agent
                     gui.presentarSalida(new MensajeConsola(myAgent.getName(), "->Agente agricultor vende cosecha por valor " + precio + " al mercado " + mensaje.getSender().getName() + "\n" + 
                             "\tTiene " + cosechas.size() + " cosechas  y ha ganado hasta ahora " + ganancia + "\n"));
 
-                    //Este mensaje destinado a todos los mercados (menos del que va a comprar la cosecha) les indica que deben borrar la oferta de este
+                    //Este mensaje va destinado a todos los mercados (menos del que va a comprar la cosecha) les indica que deben borrar la oferta de este
                     //agricultor porque ya ha sido vendida.
                     ACLMessage msg3 = new ACLMessage(ACLMessage.INFORM); 
                     msg3.setSender(myAgent.getAID());
@@ -235,10 +236,8 @@ public class AgenteAgricultor extends Agent
         }
     }
     
-    //Se ejecuta cada cierto tiempo y comprueba si hay nuevos mensajes de ganancias a mandar a la donde le corresponda.
-    //Creo que podemos comunicar las ganancias cada vez que vendamos algo. Así se actualiza mejor.
     /**
-     * OLA OLA OLA OLA OLA
+     * Tarea que comunica las ganancias a los monitores.
      */
     public class TareaComunicarGanancias extends OneShotBehaviour
     {
@@ -257,6 +256,25 @@ public class AgenteAgricultor extends Agent
                 
             msg.setContent("agricultor:" + Integer.toString(ganancia));
             send(msg);
+        }
+    }
+    
+    public class TareaFinalizar extends CyclicBehaviour
+    {
+        public TareaFinalizar()
+        {
+
+        }
+        
+        public void action()
+        {
+            ACLMessage mensaje = receive(MessageTemplate.MatchPerformative(ACLMessage.PROPAGATE));
+            if(mensaje != null)
+            {
+                myAgent.doDelete();
+            }
+            else
+                block();
         }
     }
 }

@@ -41,9 +41,9 @@ public class AgenteMercado extends Agent
         }
     };
     int fondos;
-    int cosechas;
+    int cosechas; //Número de cosechas compradas.
     private ArrayList<AID> monitores;
-    private LinkedList<Oferta> ofertas;
+    private LinkedList<Oferta> ofertas; //Ofertas recibidas por los agricultores.
     ConsolaJFrame gui;
 
     @Override
@@ -79,6 +79,7 @@ public class AgenteMercado extends Agent
         addBehaviour(new TareaConfirmarCompra());
         addBehaviour(new TareaRecibirOfertas());
         addBehaviour(new TareaBorrarOferta());
+        addBehaviour(new TareaFinalizar());
     }
 
     @Override
@@ -94,13 +95,16 @@ public class AgenteMercado extends Agent
             e.printStackTrace();
         }
         //Liberación de recursos, incluido el GUI
-        gui.dispose();
         //Despedida
         System.out.println("Finaliza la ejecución del agente: " + this.getName());
     }
 
     //Métodos de trabajo del agente
     //Clases internas que representan las tareas del agente
+    
+    /**
+     * Tarea que se ejecuta periódicamente para recibir inversiones.
+     */
     public class TareaRecibirInversiones extends TickerBehaviour 
     {
 
@@ -117,6 +121,9 @@ public class AgenteMercado extends Agent
         }
     }
     
+    /**
+     * Tarea que se ejecuta cada vez que un agricultor nos oferta su cosecha. Las almacena en la lista de ofertas.
+     */
     public class TareaRecibirOfertas extends CyclicBehaviour
     {
         public TareaRecibirOfertas()
@@ -144,6 +151,9 @@ public class AgenteMercado extends Agent
         }
     }
     
+    /**
+     * Tarea periódica que comprueba todas las ofertas
+     */
     public class TareaComprarCosecha extends TickerBehaviour
     {
         public TareaComprarCosecha(Agent a, long periodo)
@@ -181,6 +191,9 @@ public class AgenteMercado extends Agent
         }
     }
     
+    /**
+     * Tarea que se ejecuta cuando recibimos la confirmación de venta de la oferta que hemos seleccionado.
+     */
     public class TareaConfirmarCompra extends CyclicBehaviour
     {
         public TareaConfirmarCompra()
@@ -222,6 +235,10 @@ public class AgenteMercado extends Agent
         }
     }
     
+    
+    /**
+     * Tarea que se ejecutará cuando recibamos la petición de un agricultor de borrar su oferta porque otro mercado la ha comprado ya.
+     */
     public class TareaBorrarOferta extends CyclicBehaviour
     {
         public TareaBorrarOferta()
@@ -258,6 +275,9 @@ public class AgenteMercado extends Agent
         }
     }
     
+    /**
+     * Tarea que se ejecutará para comunicar a los monitores el stock actual.
+     */
     public class TareaComunicarStock extends OneShotBehaviour
     {
         public TareaComunicarStock()
@@ -274,6 +294,25 @@ public class AgenteMercado extends Agent
                 msg.addReceiver(monitor);
             msg.setContent("mercado:" + Integer.toString(cosechas));
             send(msg);
+        }
+    }
+    
+    public class TareaFinalizar extends CyclicBehaviour
+    {
+        public TareaFinalizar()
+        {
+
+        }
+        
+        public void action()
+        {
+            ACLMessage mensaje = receive(MessageTemplate.MatchPerformative(ACLMessage.PROPAGATE));
+            if(mensaje != null)
+            {
+                myAgent.doDelete();
+            }
+            else
+                block();
         }
     }
 }
